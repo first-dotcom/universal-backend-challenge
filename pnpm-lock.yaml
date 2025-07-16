@@ -11,6 +11,9 @@ importers:
       biome:
         specifier: ^0.3.3
         version: 0.3.3
+      typescript:
+        specifier: ^5.3.3
+        version: 5.8.3
 
   apps/order-api:
     dependencies:
@@ -18,11 +21,7 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
 
-  apps/order-worker:
-    devDependencies:
-      typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
+  apps/order-worker: {}
 
 packages:
 
