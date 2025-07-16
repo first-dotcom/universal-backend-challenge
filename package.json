@@ -1,11 +1,16 @@
 {
-    "name": "universal-exchange-monorepo",
-    "private": true,
-    "version": "1.0.0",
-    "scripts": {
-      "dev:order-api": "pnpm --filter order-api dev",
-      "dev:order-worker": "pnpm --filter order-worker dev",
-      "build": "pnpm -r build"
-    }
+  "name": "universal-exchange-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:order-api": "pnpm --filter order-api dev",
+    "dev:order-worker": "pnpm --filter order-worker dev",
+    "build": "pnpm -r build",
+    "format": "biome format . --write",
+    "lint": "biome check .",
+    "lint:fix": "biome check . --write"
+  },
+  "devDependencies": {
+    "biome": "^0.3.3"
   }
-  
+}
