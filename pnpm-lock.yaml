@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      universal-sdk:
+        specifier: 0.1.34
+        version: 0.1.34
     devDependencies:
       '@types/node':
         specifier: 24.0.14
@@ -26,12 +30,12 @@ importers:
       express:
         specifier: 5.1.0
         version: 5.1.0
-      universal-sdk:
-        specifier: 0.1.34
-        version: 0.1.34
       winston:
         specifier: 3.17.0
         version: 3.17.0
+      zod:
+        specifier: ^4.0.5
+        version: 4.0.5
     devDependencies:
       '@types/express':
         specifier: 5.0.0
@@ -51,9 +55,6 @@ importers:
       dotenv:
         specifier: 16.4.7
         version: 16.4.7
-      universal-sdk:
-        specifier: 0.1.34
-        version: 0.1.34
 
   shared:
     dependencies:
@@ -1269,6 +1270,9 @@ packages:
   yn@3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
     engines: {node: '>=6'}
+
+  zod@4.0.5:
+    resolution: {integrity: sha512-/5UuuRPStvHXu7RS+gmvRf4NXrNxpSllGwDnCBcJZtQsKrviYXm54yDGV2KYNLT5kq0lHGcl7lqWJLgSaG+tgA==}
 
 snapshots:
 
@@ -2746,3 +2750,5 @@ snapshots:
   xtend@4.0.2: {}
 
   yn@3.1.1: {}
+
+  zod@4.0.5: {}

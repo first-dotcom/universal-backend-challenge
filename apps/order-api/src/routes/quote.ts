@@ -1,13 +1,44 @@
 import express from 'express';
+import { z } from 'zod';
 import universalService from '../services/universal';
 import logger from 'shared/lib/logger';
+import { BlockchainName, QuoteRequest, TokenName } from 'universal-sdk';
+import { PairToken } from 'shared/types';
 
 const router: express.Router = express.Router();
 
-// GET /quote - Get a quote using dummy data
+// Define the allowed token names from the SDK
+const ALLOWED_TOKENS: TokenName[] = [
+  'ADA', 'ALGO', 'BCH', 'BTC', 'DOGE', 'DOT', 'LTC', 'NEAR', 'SOL', 'XRP', 
+  'ETH', 'AVAX', 'SHIB', 'LINK', 'MATIC', 'UNI', 'APT', 'STX', 'MKR', 'RNDR', 
+  'SUI', 'SEI', 'PEPE', 'TRUMP', 'XLM', 'HBAR', 'ICP', 'AAVE', 'ETC', 'FET', 
+  'ATOM', 'INJ', 'IMX', 'GRT', 'JASMY', 'LDO', 'QNT', 'SAND', 'XTZ', 'EOS', 
+  'HNT', 'AXS', 'MANA', 'EGLD', 'APE', 'ZEC', 'CHZ', 'MINA', 'ROSE', 'LPT', 
+  'KSM', 'BLUR', 'ZK', 'VET', 'SNX', 'GMT', 'STRK', 'PNUT', 'OP', 'ONDO', 
+  'MOVE', 'JTO', 'FLOW', 'FLOKI', 'FLR', 'FIL', 'ENS', 'WIF', 'CRV', 'CRO', 
+  'TIA', 'BONK', 'ARB', '1INCH'
+];
+
+// Define the allowed blockchain names from the SDK
+const ALLOWED_BLOCKCHAINS: BlockchainName[] = ['ARBITRUM', 'BASE', 'POLYGON', 'WORLD'];
+
+const addressRegex = /^0x[a-fA-F0-9]{40}$/;
+// Zod schema for QuoteRequest validation
+const QuoteRequestSchema = z.object({
+  type: z.enum(['BUY', 'SELL']),
+  token: z.enum(ALLOWED_TOKENS),
+  pair_token: z.union([z.literal('USDC'), z.string().regex(addressRegex, 'Invalid token address')]),
+  pair_token_amount: z.string().min(1, 'Pair token amount is required').optional(),
+  blockchain: z.enum(ALLOWED_BLOCKCHAINS),
+  user_address: z.string().regex(addressRegex, 'Invalid user address'),
+  slippage_bips: z.number().min(0, 'Slippage must be positive').max(10000, 'Slippage must be less than 10000 bips').optional(),
+  token_amount: z.string().optional(),
+});
+
+// GET /quote - Get a quote using dummy data (kept for backwards compatibility)
 router.get('/', async (req, res) => {
   try {
-    logger.info('Processing quote request');
+    logger.info('Processing quote request with dummy data');
     
     // Create dummy quote request
     const dummyQuoteRequest = universalService.createDummyQuoteRequest();
@@ -20,6 +51,54 @@ router.get('/', async (req, res) => {
       success: true,
       data: quote,
       requestData: dummyQuoteRequest
+    });
+  } catch (error) {
+    logger.error('Quote request failed:', error);
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get quote'
+    });
+  }
+});
+
+// POST /quote - Get a quote using real request data
+router.post('/', async (req, res) => {
+  try {
+    logger.info('Processing quote request with real data');
+    
+    // Validate request body using zod
+    const validationResult = QuoteRequestSchema.safeParse(req.body);
+    
+    if (!validationResult.success) {
+      logger.warn('Invalid quote request data:', validationResult.error.issues);
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid request data',
+        details: validationResult.error.issues
+      });
+    }
+    
+    const quoteRequest = validationResult.data;
+
+    const mappedQuoteRequest: QuoteRequest = {
+      type: quoteRequest.type,
+      token: quoteRequest.token,
+      pair_token: quoteRequest.pair_token as PairToken,
+      pair_token_amount: quoteRequest.pair_token_amount,
+      blockchain: quoteRequest.blockchain,
+      user_address: quoteRequest.user_address,
+      slippage_bips: quoteRequest.slippage_bips,
+      token_amount: quoteRequest.token_amount,
+    }
+    
+    // Get quote from universal service
+    const quote = await universalService.getQuote(mappedQuoteRequest);
+    
+    logger.info('Quote request processed successfully');
+    res.json({
+      success: true,
+      data: quote,
+      requestData: quoteRequest
     });
   } catch (error) {
     logger.error('Quote request failed:', error);
