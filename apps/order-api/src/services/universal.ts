@@ -1,6 +1,7 @@
+import 'dotenv/config';
 import { UniversalRelayerSDK } from 'universal-sdk';
 import logger from 'shared/lib/logger';
-import type { QuoteRequest } from 'universal-sdk';
+import type { OrderRequest, OrderResponse, Quote, QuoteRequest } from 'universal-sdk';
 
 class UniversalService {
   private sdk: UniversalRelayerSDK;
@@ -13,23 +14,23 @@ class UniversalService {
     this.sdk = new UniversalRelayerSDK(apiKey);
   }
 
-  async getQuote(quoteRequest: QuoteRequest): Promise<any> {
+  async getQuote(quoteRequest: QuoteRequest): Promise<Quote> {
     try {
       logger.info('Fetching quote from universal-sdk', { quoteRequest });
       const quote = await this.sdk.getQuote(quoteRequest);
-      logger.info('Quote received successfully');
+      logger.info('Quote received successfully', { quoteId: quote.id });
       return quote;
     } catch (error) {
-      logger.error('Failed to get quote:', error);
+      logger.error(`Failed to get quote. Error: ${error}`);
       throw error;
     }
   }
 
-  async submitOrder(quoteData: any): Promise<any> {
+  async submitOrder(quoteData: OrderRequest): Promise<OrderResponse> {
     try {
       logger.info('Submitting order to universal-sdk', { quoteData });
       const order = await this.sdk.submitOrder(quoteData);
-      logger.info('Order submitted successfully');
+      logger.info('Order submitted successfully', { orderId: order.order_id, transactionHash: order.transaction_hash });
       return order;
     } catch (error) {
       logger.error('Failed to submit order:', error);
@@ -51,4 +52,4 @@ class UniversalService {
   }
 }
 
-export default new UniversalService(); 
+export default new UniversalService();

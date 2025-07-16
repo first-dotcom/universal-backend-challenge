@@ -1,34 +1,58 @@
 import express from 'express';
+import { z } from 'zod';
 import universalService from '../services/universal';
 import logger from 'shared/lib/logger';
 import { Order } from 'shared/types';
+import { OrderRequest, QuoteRequest } from 'universal-sdk';
+import { ALLOWED_TOKENS } from '../config';
 
 const router: express.Router = express.Router();
 
 // In-memory storage for demo purposes (replace with actual database)
 const orderStorage: Map<string, Order> = new Map();
 
+const OrderRequestSchema = z.object({
+  id: z.string(),
+  deadline: z.string(),
+  merchant_address: z.string(),
+  gas_fee_nominal: z.string(),
+  gas_fee_dollars: z.number(),
+  relayer_nonce: z.number(),
+  merchant_id: z.string(),
+  mode: z.enum(['BRIDGED', 'DIRECT']),
+  pair_token_amount: z.string(),
+  user_address: z.string(),
+  type: z.enum(['BUY', 'SELL']),
+  blockchain: z.string(),
+  token: z.enum(ALLOWED_TOKENS),
+  token_amount: z.string().optional(),
+  pair_token: z.string(),
+  slippage_bips: z.number().optional(),
+  signature: z.string(),
+});
+
 // POST /order - Submit an order
 router.post('/', async (req, res) => {
   try {
     logger.info('Processing order submission');
     
-    const quoteData = req.body;
+    const validationResult = OrderRequestSchema.safeParse(req.body);
     
-    if (!quoteData) {
+    if (!validationResult.success) {
       return res.status(400).json({
         success: false,
-        error: 'Quote data is required'
+        error: 'Invalid order request data',
+        details: validationResult.error.issues
       });
     }
 
     // Submit order to universal service
-    const orderResult = await universalService.submitOrder(quoteData);
+    const orderResult = await universalService.submitOrder(validationResult.data as OrderRequest);
     
     // Create order object for storage
     const order: Order = {
       id: generateOrderId(),
-      quote: quoteData,
+      quote: validationResult.data as QuoteRequest,
       status: 'SUBMITTED'
     };
     

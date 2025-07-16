@@ -2,27 +2,12 @@ import express from 'express';
 import { z } from 'zod';
 import universalService from '../services/universal';
 import logger from 'shared/lib/logger';
-import { BlockchainName, QuoteRequest, TokenName } from 'universal-sdk';
+import { QuoteRequest } from 'universal-sdk';
 import { PairToken } from 'shared/types';
+import { ALLOWED_TOKENS, ALLOWED_BLOCKCHAINS, addressRegex } from '../config';
 
 const router: express.Router = express.Router();
 
-// Define the allowed token names from the SDK
-const ALLOWED_TOKENS: TokenName[] = [
-  'ADA', 'ALGO', 'BCH', 'BTC', 'DOGE', 'DOT', 'LTC', 'NEAR', 'SOL', 'XRP', 
-  'ETH', 'AVAX', 'SHIB', 'LINK', 'MATIC', 'UNI', 'APT', 'STX', 'MKR', 'RNDR', 
-  'SUI', 'SEI', 'PEPE', 'TRUMP', 'XLM', 'HBAR', 'ICP', 'AAVE', 'ETC', 'FET', 
-  'ATOM', 'INJ', 'IMX', 'GRT', 'JASMY', 'LDO', 'QNT', 'SAND', 'XTZ', 'EOS', 
-  'HNT', 'AXS', 'MANA', 'EGLD', 'APE', 'ZEC', 'CHZ', 'MINA', 'ROSE', 'LPT', 
-  'KSM', 'BLUR', 'ZK', 'VET', 'SNX', 'GMT', 'STRK', 'PNUT', 'OP', 'ONDO', 
-  'MOVE', 'JTO', 'FLOW', 'FLOKI', 'FLR', 'FIL', 'ENS', 'WIF', 'CRV', 'CRO', 
-  'TIA', 'BONK', 'ARB', '1INCH'
-];
-
-// Define the allowed blockchain names from the SDK
-const ALLOWED_BLOCKCHAINS: BlockchainName[] = ['ARBITRUM', 'BASE', 'POLYGON', 'WORLD'];
-
-const addressRegex = /^0x[a-fA-F0-9]{40}$/;
 // Zod schema for QuoteRequest validation
 const QuoteRequestSchema = z.object({
   type: z.enum(['BUY', 'SELL']),
@@ -50,7 +35,6 @@ router.get('/', async (req, res) => {
     res.json({
       success: true,
       data: quote,
-      requestData: dummyQuoteRequest
     });
   } catch (error) {
     logger.error('Quote request failed:', error);
@@ -78,27 +62,15 @@ router.post('/', async (req, res) => {
       });
     }
     
-    const quoteRequest = validationResult.data;
+    const quoteRequest = validationResult.data as QuoteRequest;
 
-    const mappedQuoteRequest: QuoteRequest = {
-      type: quoteRequest.type,
-      token: quoteRequest.token,
-      pair_token: quoteRequest.pair_token as PairToken,
-      pair_token_amount: quoteRequest.pair_token_amount,
-      blockchain: quoteRequest.blockchain,
-      user_address: quoteRequest.user_address,
-      slippage_bips: quoteRequest.slippage_bips,
-      token_amount: quoteRequest.token_amount,
-    }
-    
     // Get quote from universal service
-    const quote = await universalService.getQuote(mappedQuoteRequest);
+    const quote = await universalService.getQuote(quoteRequest);
     
     logger.info('Quote request processed successfully');
     res.json({
       success: true,
-      data: quote,
-      requestData: quoteRequest
+      data: quote
     });
   } catch (error) {
     logger.error('Quote request failed:', error);
