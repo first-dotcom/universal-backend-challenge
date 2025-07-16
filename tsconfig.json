@@ -1,6 +1,10 @@
 {
     "extends": "./tsconfig.base.json",
-    "include": [],
-    "exclude": []
+    "files": [],
+    "references": [
+      { "path": "apps/order-api" },
+      { "path": "apps/order-worker" },
+      { "path": "shared" }
+    ]
   }
   
