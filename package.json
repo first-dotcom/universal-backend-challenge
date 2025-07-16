@@ -11,8 +11,8 @@
     "lint:fix": "biome check . --write"
   },
   "devDependencies": {
-    "@types/node": "^24.0.14",
-    "biome": "^0.3.3",
-    "typescript": "^5.3.3"
+    "@types/node": "24.0.14",
+    "biome": "0.3.3",
+    "typescript": "5.8.3"
   }
 }

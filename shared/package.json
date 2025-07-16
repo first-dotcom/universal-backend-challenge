@@ -6,7 +6,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "redis": "^5.6.0",
-    "winston": "^3.17.0"
+    "redis": "5.6.0",
+    "winston": "3.17.0"
   }
 }

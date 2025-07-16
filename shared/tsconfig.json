@@ -3,9 +3,11 @@
     "compilerOptions": {
       "outDir": "dist",
       "rootDir": "src",
-      "composite": true
+      "composite": true,
+      "declaration": true,
+      "declarationMap": true
     },
-    "include": ["src"],
+    "include": ["src/lib/logger.ts", "src/types"],
     "exclude": ["dist", "node_modules"]
   }
   

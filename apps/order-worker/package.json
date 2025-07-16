@@ -1,9 +1,11 @@
 {
-    "name": "order-worker",
-    "version": "1.0.0",
-    "main": "dist/index.js",
-    "scripts": {
-      "build": "tsc"
-    }
+  "name": "order-worker",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "universal-sdk": "0.1.34"
   }
-  
+}
