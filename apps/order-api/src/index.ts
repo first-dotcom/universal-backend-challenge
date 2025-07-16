@@ -1,6 +1,6 @@
+import "dotenv/config";
 import express from 'express';
 import logger from 'shared/lib/logger';
-// import logger from '@   shared/lib/logger';
 import quoteRoutes from './routes/quote';
 import orderRoutes from './routes/order';
 
