@@ -1,0 +1,11 @@
+{
+    "name": "universal-exchange-monorepo",
+    "private": true,
+    "version": "1.0.0",
+    "scripts": {
+      "dev:order-api": "pnpm --filter order-api dev",
+      "dev:order-worker": "pnpm --filter order-worker dev",
+      "build": "pnpm -r build"
+    }
+  }
+  
