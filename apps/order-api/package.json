@@ -1,11 +1,11 @@
 {
   "name": "order-api",
   "version": "1.0.0",
-  "main": "dist/server.js",
+  "main": "dist/apps/order-api/src/server.js",
   "scripts": {
     "build": "tsc",
     "dev": "ts-node-dev src/server.ts",
-    "start": "node dist/server.js"
+    "start": "node dist/apps/order-api/src/server.js"
   },
   "dependencies": {
     "dotenv": "16.4.7",

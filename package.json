@@ -14,10 +14,15 @@
   },
   "dependencies": {
     "universal-sdk": "0.1.34",
-    "drizzle-orm": "0.44.3"
+    "drizzle-orm": "0.44.3",
+    "pg": "8.16.3",
+    "winston": "3.17.0",
+    "redis": "5.6.0",
+    "tslib": "^2.6.2"
   },
   "devDependencies": {
     "@types/node": "24.0.14",
+    "@types/pg": "8.15.4",
     "biome": "0.3.3",
     "typescript": "5.8.3"
   }

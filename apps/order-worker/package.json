@@ -1,11 +1,11 @@
 {
   "name": "order-worker",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/apps/order-worker/src/index.js",
   "scripts": {
     "build": "tsc",
     "dev": "ts-node-dev src/index.ts",
-    "start": "node dist/index.js"
+    "start": "node dist/apps/order-worker/src/index.js"
   },
   "dependencies": {
     "dotenv": "16.4.7",
