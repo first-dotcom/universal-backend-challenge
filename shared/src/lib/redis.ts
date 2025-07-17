@@ -4,11 +4,33 @@ import { getIp } from '../utils/ip';
 
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 
+// High RPS Redis Configuration
+const redisConfig = {
+  url: REDIS_URL,
+  
+  // Connection pool settings
+  socket: {
+    connectTimeout: 5000,     // 5s connection timeout
+    commandTimeout: 3000,     // 3s command timeout
+    lazyConnect: true,        // Connect only when needed
+    reconnectStrategy: (retries: number) => Math.min(retries * 50, 1000), // Exponential backoff
+  },
+  
+  // Performance settings
+  commandsQueueMaxLength: 1000,  // Max queued commands
+  maxRetriesPerRequest: 3,       // Retry failed commands
+  retryDelayOnFailover: 100,     // Delay between retries
+  enableOfflineQueue: false,     // Don't queue commands when offline
+  
+  // Keep-alive settings
+  pingInterval: 30000,           // Ping every 30s to keep connection alive
+};
+
 // Create publish client
-export const pubClient: ReturnType<typeof createClient> = createClient({ url: REDIS_URL });
+export const pubClient: ReturnType<typeof createClient> = createClient(redisConfig);
 
 // Create subscribe client  
-export const subClient: ReturnType<typeof createClient> = createClient({ url: REDIS_URL });
+export const subClient: ReturnType<typeof createClient> = createClient(redisConfig);
 
 // Setup event handlers for publish client
 const setupPubClientHandlers = () => {
