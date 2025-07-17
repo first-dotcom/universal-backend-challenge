@@ -2,7 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import logger from 'shared/lib/logger';
 import { Order, OrderStatus } from 'shared/types';
-import { QuoteRequest } from 'universal-sdk';
+import { OrderRequest } from 'universal-sdk';
 import { ALLOWED_TOKENS } from '../config';
 import db from 'shared/lib/database';
 import { orders } from 'shared/lib/schema';
@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
     const orderId = generateOrderId();
     const order: Order = {
       id: orderId,
-      quote: validationResult.data as QuoteRequest,
+      quote: validationResult.data as OrderRequest,
       status: 'PENDING'
     };
     
@@ -104,7 +104,7 @@ router.get('/:id', async (req, res) => {
     const order = result[0];
     const orderResponse: Order = {
       id: order.id,
-      quote: order.quote as QuoteRequest,
+      quote: order.quote as OrderRequest,
       status: order.status as OrderStatus
     };
     

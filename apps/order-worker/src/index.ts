@@ -3,7 +3,7 @@ import { UniversalRelayerSDK } from 'universal-sdk';
 import logger from 'shared/lib/logger';
 import { Order } from 'shared/types';
 import { subClient, initializeRedisClients } from 'shared/lib/redis';
-import { StreamMessage, CONFIG, setupWallet, generateConsumerName } from './constants';
+import { StreamMessage, CONFIG, generateConsumerName } from './constants';
 import { OrderProcessor } from './order-processor';
 import { delay } from 'shared/lib/time';
 
@@ -19,9 +19,8 @@ class OrderWorker {
     }
     
     const sdk = new UniversalRelayerSDK(apiKey);
-    const wallet = setupWallet();
     this.consumerName = generateConsumerName();
-    this.processor = new OrderProcessor(sdk, wallet);
+    this.processor = new OrderProcessor(sdk);
   }
 
   async start() {

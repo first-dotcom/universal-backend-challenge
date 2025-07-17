@@ -1,6 +1,5 @@
 import { UniversalRelayerSDK } from 'universal-sdk';
 import { eq, and } from 'drizzle-orm';
-import { ethers } from 'ethers';
 import logger from '../../../shared/src/lib/logger';
 import db from '../../../shared/src/lib/database';
 import { orders } from '../../../shared/src/lib/schema';
@@ -11,7 +10,6 @@ import { delay } from 'shared/lib/time';
 
 export class OrderProcessor {
   private sdk: UniversalRelayerSDK;
-  private wallet: ethers.Wallet;
   
   // Simple circuit breaker
   private circuitBreaker = {
@@ -20,9 +18,8 @@ export class OrderProcessor {
     isOpen: false
   };
 
-  constructor(sdk: UniversalRelayerSDK, wallet: ethers.Wallet) {
+  constructor(sdk: UniversalRelayerSDK) {
     this.sdk = sdk;
-    this.wallet = wallet;
   }
 
   async processOrder(orderId: string, orderData: Order): Promise<ProcessingResult> {
@@ -55,7 +52,7 @@ export class OrderProcessor {
     }
     
     // All retries failed - move to DLQ
-    await this.moveToDLQ(orderId, orderData, lastError || 'Unknown error');
+    await this.moveToFailed(orderId, orderData, lastError || 'Unknown error');
     await this.markAsFailed(orderId);
     return { success: false, error: lastError };
   }
@@ -78,19 +75,8 @@ export class OrderProcessor {
     externalOrderId: string;
     transactionHash?: string;
   }> {
-    // Get quote and submit
-    const quote = await this.sdk.getQuote({
-      type: order.quote.type as "BUY" | "SELL",
-      token: order.quote.token,
-      pair_token: order.quote.pair_token,
-      pair_token_amount: order.quote.pair_token_amount,
-      blockchain: order.quote.blockchain,
-      user_address: order.quote.user_address,
-      slippage_bips: order.quote.slippage_bips
-    });
-
-    const signature = await this.signQuote(quote);
-    const orderResult = await this.sdk.submitOrder({ ...quote, signature });
+    // Submit order with client's signature (already included in order.quote)
+    const orderResult = await this.sdk.submitOrder(order.quote);
 
     // Update database
     await db.update(orders)
@@ -108,50 +94,24 @@ export class OrderProcessor {
     };
   }
 
-  private async signQuote(quote: any): Promise<string> {
-    const domain = {
-      name: 'Universal Relayer',
-      version: '1',
-      chainId: quote.blockchain === 'ethereum' ? 1 : 137,
-    };
 
-    const types = {
-      Order: [
-        { name: 'type', type: 'string' },
-        { name: 'token', type: 'address' },
-        { name: 'pairToken', type: 'address' },
-        { name: 'amount', type: 'uint256' },
-        { name: 'userAddress', type: 'address' },
-      ]
-    };
 
-    const value = {
-      type: quote.type,
-      token: quote.token,
-      pairToken: quote.pair_token,
-      amount: quote.pair_token_amount,
-      userAddress: quote.user_address,
-    };
-
-    return await this.wallet._signTypedData(domain, types, value);
-  }
-
-  private async moveToDLQ(orderId: string, orderData: Order, error: string): Promise<void> {
+  private async moveToFailed(orderId: string, orderData: Order, error: string): Promise<void> {
     try {
       const timestamp = Date.now();
       const key = `failed-${orderId}-${timestamp}`;
-      const dlqData = {
+      const failedData = {
         orderData,
         error: error.substring(0, 500),
         failedAt: new Date().toISOString(),
         retryCount: CONFIG.MAX_RETRIES
       };
       
-      await subClient.hSet(CONFIG.FAILED_ORDERS_KEY, key, JSON.stringify(dlqData));
+      await subClient.hSet(CONFIG.FAILED_ORDERS_KEY, key, JSON.stringify(failedData));
       
-      logger.info('Order moved to DLQ:', { orderId, key, error: error.substring(0, 100) });
-    } catch (dlqError) {
-      logger.error('Failed to move order to DLQ:', { orderId, error: dlqError });
+      logger.info('Order moved to failed:', { orderId, key, error: error.substring(0, 100) });
+    } catch (failedError) {
+      logger.error('Failed to move order to failed:', { orderId, error: failedError });
     }
   }
 
