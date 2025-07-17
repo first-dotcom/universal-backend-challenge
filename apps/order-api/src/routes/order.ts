@@ -1,15 +1,15 @@
 import express from 'express';
 import { z } from 'zod';
-import universalService from '../services/universal';
 import logger from 'shared/lib/logger';
-import { Order } from 'shared/types';
-import { OrderRequest, QuoteRequest } from 'universal-sdk';
+import { Order, OrderStatus } from 'shared/types';
+import { QuoteRequest } from 'universal-sdk';
 import { ALLOWED_TOKENS } from '../config';
+import db from 'shared/lib/database';
+import { orders } from 'shared/lib/schema';
+import { pubClient } from 'shared/lib/redis';
+import { eq } from 'drizzle-orm';
 
 const router: express.Router = express.Router();
-
-// In-memory storage for demo purposes (replace with actual database)
-const orderStorage: Map<string, Order> = new Map();
 
 const OrderRequestSchema = z.object({
   id: z.string(),
@@ -46,25 +46,35 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Submit order to universal service
-    const orderResult = await universalService.submitOrder(validationResult.data as OrderRequest);
-    
     // Create order object for storage
+    const orderId = generateOrderId();
     const order: Order = {
-      id: generateOrderId(),
+      id: orderId,
       quote: validationResult.data as QuoteRequest,
-      status: 'SUBMITTED'
+      status: 'PENDING'
     };
     
-    // Store order (in real app, this would be saved to database)
-    orderStorage.set(order.id, order);
+    // Store order in database
+    await db.insert(orders).values({
+      id: orderId,
+      quote: validationResult.data,
+      status: 'PENDING'
+    });
     
-    logger.info('Order submitted successfully', { orderId: order.id });
+    // Publish to Redis Stream for worker to process
+    await pubClient.xAdd('orders:stream', '*', {
+      orderId,
+      orderData: JSON.stringify(order),
+      createdAt: new Date().toISOString(),
+      status: 'PENDING'
+    });
+    
+    logger.info('Order created successfully', { orderId: order.id });
     res.json({
       success: true,
       data: {
         order,
-        universalResult: orderResult
+        message: 'Order created and queued for processing'
       }
     });
   } catch (error) {
@@ -77,24 +87,31 @@ router.post('/', async (req, res) => {
 });
 
 // GET /order/:id - Get order by ID
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const orderId = req.params.id;
     logger.info('Fetching order', { orderId });
     
-    const order = orderStorage.get(orderId);
+    const result = await db.select().from(orders).where(eq(orders.id, orderId));
     
-    if (!order) {
+    if (result.length === 0) {
       return res.status(404).json({
         success: false,
         error: 'Order not found'
       });
     }
     
+    const order = result[0];
+    const orderResponse: Order = {
+      id: order.id,
+      quote: order.quote as QuoteRequest,
+      status: order.status as OrderStatus
+    };
+    
     logger.info('Order retrieved successfully', { orderId });
     res.json({
       success: true,
-      data: order
+      data: orderResponse
     });
   } catch (error) {
     logger.error('Failed to fetch order:', error);
