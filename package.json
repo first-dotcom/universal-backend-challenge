@@ -11,7 +11,8 @@
     "lint:fix": "biome check . --write"
   },
   "dependencies": {
-    "universal-sdk": "0.1.34"
+    "universal-sdk": "0.1.34",
+    "drizzle-orm": "0.44.3"
   },
   "devDependencies": {
     "@types/node": "24.0.14",
