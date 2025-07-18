@@ -5,19 +5,4 @@ metadata:
   namespace: universal-exchange
 data:
   NODE_ENV: "production"
-  PORT: "3000"
-  # External Database - managed service (AWS RDS, Google Cloud SQL, etc.)
-  DATABASE_URL: "postgresql://username:password@db-cluster.region.rds.amazonaws.com:5432/universal_exchange"
-  # External Redis - managed service (AWS ElastiCache, Google Memorystore, etc.)
-  REDIS_URL: "redis://redis-cluster.region.cache.amazonaws.com:6379"
-  # Logging
-  LOG_LEVEL: "info"
-  # API Configuration
-  API_TIMEOUT: "30000"
-  # Database Configuration for external DB
-  DB_POOL_MIN: "10"
-  DB_POOL_MAX: "50"
-  DB_IDLE_TIMEOUT: "30000"
-  DB_CONNECTION_TIMEOUT: "5000"
-  # SSL for external DB
-  DB_SSL_MODE: "require" 
+  PORT: "3000" 

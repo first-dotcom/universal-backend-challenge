@@ -38,8 +38,8 @@ spec:
               key: DATABASE_URL
         - name: REDIS_URL
           valueFrom:
-            configMapKeyRef:
-              name: universal-config
+            secretKeyRef:
+              name: universal-secrets
               key: REDIS_URL
         - name: UNIVERSAL_API_KEY
           valueFrom:

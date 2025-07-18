@@ -4,9 +4,11 @@ metadata:
   name: order-api-ingress
   namespace: universal-exchange
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Rate limiting
     nginx.ingress.kubernetes.io/rate-limit: "100"
     nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/rate-limit-rps: "10"
+    # SSL
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
@@ -19,7 +21,24 @@ spec:
   - host: api.universal-exchange.com
     http:
       paths:
-      - path: /
+      # Health endpoints
+      - path: /health
+        pathType: Prefix
+        backend:
+          service:
+            name: order-api
+            port:
+              number: 80
+      # Quote endpoints  
+      - path: /quote
+        pathType: Prefix
+        backend:
+          service:
+            name: order-api
+            port:
+              number: 80
+      # Order endpoints
+      - path: /order
         pathType: Prefix
         backend:
           service:
