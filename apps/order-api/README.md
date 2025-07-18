@@ -1,6 +1,6 @@
 # Order API
 
-A TypeScript Express backend for handling quotes and orders via the Universal SDK.
+A TypeScript Express REST API for handling cryptocurrency quotes and orders via the Universal SDK.
 
 ## Setup
 
@@ -9,12 +9,13 @@ A TypeScript Express backend for handling quotes and orders via the Universal SD
 pnpm install
 ```
 
-2. Create environment file:
+2. Environment configuration:
 ```bash
-# Create .env file with the following variables:
-UNIVERSAL_API_KEY=your_universal_api_key_here
-PORT=3000
+# Required environment variables
+DATABASE_URL=postgresql://user:pass@localhost:5432/universal_exchange
+REDIS_URL=redis://localhost:6379
 NODE_ENV=development
+PORT=3000
 ```
 
 3. Run the application:
@@ -30,32 +31,35 @@ pnpm start
 ## API Endpoints
 
 ### GET /quote
-Get a quote using dummy data from the Universal SDK.
+Get a quote from the Universal API (no API key required).
 
 **Response:**
 ```json
 {
   "success": true,
   "data": {
-    // Universal SDK quote response
-  },
-  "requestData": {
-    // The dummy quote request data used
+    "type": "BUY",
+    "token": "ETH",
+    "pair_token": "USDC",
+    "pair_token_amount": "1000",
+    "blockchain": "BASE",
+    "user_address": "0x1111111111111111111111111111111111111111",
+    "slippage_bips": 50
   }
 }
 ```
 
 ### POST /order
-Submit an order with quote data to the Universal SDK.
+Submit an order to the database.
 
 **Request Body:**
 ```json
 {
   "type": "BUY",
-  "token": "0x1234567890123456789012345678901234567890",
-  "pair_token": "0x0987654321098765432109876543210987654321",
-  "pair_token_amount": "1000000000000000000",
-  "blockchain": "ethereum",
+  "token": "ETH",
+  "pair_token": "USDC",
+  "pair_token_amount": "1000",
+  "blockchain": "BASE",
   "user_address": "0x1111111111111111111111111111111111111111",
   "slippage_bips": 50
 }
@@ -66,12 +70,9 @@ Submit an order with quote data to the Universal SDK.
 {
   "success": true,
   "data": {
-    "order": {
-      "id": "order_1234567890_abc123",
-      "quote": { /* quote data */ },
-      "status": "SUBMITTED"
-    },
-    "universalResult": { /* Universal SDK response */ }
+    "id": "order_1234567890_abc123",
+    "status": "PENDING",
+    "created_at": "2024-01-01T00:00:00.000Z"
   }
 }
 ```
@@ -85,47 +86,43 @@ Get order details by ID.
   "success": true,
   "data": {
     "id": "order_1234567890_abc123",
-    "quote": { /* quote data */ },
-    "status": "SUBMITTED"
+    "status": "PENDING",
+    "created_at": "2024-01-01T00:00:00.000Z"
   }
 }
 ```
 
 ### GET /health
-Health check endpoint.
+Health check endpoint with system status.
 
 **Response:**
 ```json
 {
   "status": "OK",
-  "timestamp": "2024-01-01T00:00:00.000Z"
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "memory": "5.2%",
+  "cpu": "12.3%",
+  "database": "connected",
+  "redis": "connected"
 }
 ```
 
 ## Architecture
 
-- **server.ts**: Entry point that loads environment variables and starts the server
-- **index.ts**: Express configuration with middleware and route setup
-- **services/universal.ts**: Service layer for Universal SDK integration
-- **routes/**: Route handlers organized by functionality
-  - **quote.ts**: Quote-related endpoints
-  - **order.ts**: Order-related endpoints
+- **server.ts**: Entry point and server initialization
+- **index.ts**: Express app configuration and middleware
+- **services/universal.ts**: Universal SDK integration
+- **routes/**: API route handlers
+  - **quote.ts**: Quote endpoints
+  - **order.ts**: Order endpoints
 
 ## Features
 
-- TypeScript support with proper type definitions
+- TypeScript with strict type checking
 - Winston logging via shared package
-- Environment variable configuration with dotenv
-- Clean separation of concerns with service layer
+- PostgreSQL with Drizzle ORM
+- Redis for caching and queues
+- Universal SDK integration (no API key required)
+- Health monitoring
 - Error handling middleware
-- Request logging middleware
-- Health check endpoint
-- In-memory order storage (replace with database in production)
-
-## Dependencies
-
-- **express**: Web framework
-- **universal-sdk**: Universal SDK for quote and order operations
-- **winston**: Logging (via shared package)
-- **dotenv**: Environment variable management
-- **TypeScript**: Type safety and development experience 
+- Request logging 
