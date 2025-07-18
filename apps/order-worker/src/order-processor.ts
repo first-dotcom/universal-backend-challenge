@@ -1,10 +1,10 @@
 import { UniversalRelayerSDK } from 'universal-sdk';
 import { eq, and } from 'drizzle-orm';
-import logger from '../../../shared/src/lib/logger';
-import db from '../../../shared/src/lib/database';
-import { orders } from '../../../shared/src/lib/schema';
-import { Order } from '../../../shared/src/types';
-import { subClient } from '../../../shared/src/lib/redis';
+import logger, { logOrder, logError } from 'shared/lib/logger';
+import db from 'shared/lib/database';
+import { orders } from 'shared/lib/schema';
+import { Order } from 'shared/types';
+import { subClient } from 'shared/lib/redis';
 import { ProcessingResult, CONFIG } from './constants';
 import { delay } from 'shared/lib/time';
 
@@ -22,8 +22,11 @@ export class OrderProcessor {
     this.sdk = sdk;
   }
 
-  async processOrder(orderId: string, orderData: Order): Promise<ProcessingResult> {
+  async processOrder(orderId: string, orderData: Order, traceId?: string): Promise<ProcessingResult> {
     let lastError: string | undefined;
+    
+    // Log order processing start with traceId
+    logOrder(orderId, 'processing_started', 'PROCESSING', traceId);
     
     for (let attempt = 1; attempt <= CONFIG.MAX_RETRIES; attempt++) {
       try {
@@ -39,6 +42,10 @@ export class OrderProcessor {
 
         const result = await this.submitToExternalService(orderData);
         this.onSuccess();
+        
+        // Log successful completion
+        logOrder(orderId, 'processing_completed', 'COMPLETED', traceId);
+        
         return { success: true, ...result };
         
       } catch (error) {
@@ -54,6 +61,10 @@ export class OrderProcessor {
     // All retries failed - move to DLQ
     await this.moveToFailed(orderId, orderData, lastError || 'Unknown error');
     await this.markAsFailed(orderId);
+    
+    // Log final failure
+    logOrder(orderId, 'processing_failed_final', 'FAILED', traceId);
+    
     return { success: false, error: lastError };
   }
 

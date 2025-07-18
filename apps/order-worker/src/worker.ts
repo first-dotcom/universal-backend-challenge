@@ -1,136 +1,131 @@
 import "dotenv/config";
 import { UniversalRelayerSDK } from 'universal-sdk';
-import logger from 'shared/lib/logger';
-import { Order } from 'shared/types';
 import { subClient, initializeRedisClients } from 'shared/lib/redis';
-import { StreamMessage, CONFIG, generateConsumerName } from './constants';
+import { logOrder, logError } from 'shared/lib/logger';
 import { OrderProcessor } from './order-processor';
-import { delay } from 'shared/lib/time';
+import { Order } from 'shared/types';
+import { CONFIG } from './constants';
 
 class OrderWorker {
-  private isRunning = false;
-  private consumerName: string;
   private processor: OrderProcessor;
+  private isRunning = false;
 
   constructor() {
-    const apiKey = process.env.UNIVERSAL_API_KEY;
-    if (!apiKey) {
-      throw new Error('UNIVERSAL_API_KEY environment variable is required');
-    }
-    
-    const sdk = new UniversalRelayerSDK(apiKey);
-    this.consumerName = generateConsumerName();
+    const sdk = new UniversalRelayerSDK();
     this.processor = new OrderProcessor(sdk);
   }
 
-  async start() {
+  async start(): Promise<void> {
     try {
       await initializeRedisClients();
+      this.isRunning = true;
       
-      // Create consumer group
+      // Create consumer group if it doesn't exist
       try {
         await subClient.xGroupCreate(CONFIG.STREAM_KEY, CONFIG.CONSUMER_GROUP, '$', {
           MKSTREAM: true
         });
-      } catch (error: any) {
-        if (!error.message.includes('BUSYGROUP')) throw error;
+      } catch (error) {
+        // Group might already exist, ignore error
       }
 
-      this.isRunning = true;
-      logger.info('Order worker started', { consumerName: this.consumerName });
+      console.log('Order worker started, listening for orders...');
       
-      this.processLoop();
+      // Start processing orders
+      this.processOrders();
+      
+      // Handle graceful shutdown
+      process.on('SIGINT', this.shutdown.bind(this));
+      process.on('SIGTERM', this.shutdown.bind(this));
+      
     } catch (error) {
-      logger.error('Failed to start order worker:', error);
+      logError('Failed to start order worker', error as Error, {
+        operation: 'worker_start'
+      });
       process.exit(1);
     }
   }
 
-  private async processLoop() {
+  private async processOrders(): Promise<void> {
     while (this.isRunning) {
       try {
         const messages = await subClient.xReadGroup(
           CONFIG.CONSUMER_GROUP,
-          this.consumerName,
+          `worker-${process.pid}`,
           [{ key: CONFIG.STREAM_KEY, id: '>' }],
           { COUNT: 1, BLOCK: 1000 }
         );
 
-        if (messages && Array.isArray(messages) && messages.length > 0) {
-          const stream = messages[0] as any;
-          if (stream?.messages && Array.isArray(stream.messages)) {
-            for (const message of stream.messages) {
-              await this.handleMessage(message);
+        if (messages && Array.isArray(messages)) {
+          for (const stream of messages) {
+            if (stream && typeof stream === 'object' && 'messages' in stream) {
+              const streamMessages = stream.messages as Array<{
+                id: string;
+                message: Record<string, string>;
+              }>;
+              
+              for (const message of streamMessages) {
+                const { orderId, orderData, traceId } = message.message;
+                
+                if (orderId && orderData) {
+                  try {
+                    const order: Order = JSON.parse(orderData);
+                    
+                    // Log order received with traceId for tracking
+                    logOrder(orderId, 'received_by_worker', 'PROCESSING', traceId);
+                    
+                    const result = await this.processor.processOrder(orderId, order, traceId);
+                    
+                    if (result.success) {
+                      logOrder(orderId, 'worker_completed', 'COMPLETED', traceId);
+                    } else {
+                      logOrder(orderId, 'worker_failed', 'FAILED', traceId);
+                    }
+                    
+                    // Acknowledge message
+                    await subClient.xAck(CONFIG.STREAM_KEY, CONFIG.CONSUMER_GROUP, message.id);
+                    
+                  } catch (error) {
+                    logError('Error processing order', error as Error, {
+                      orderId,
+                      traceId,
+                      operation: 'order_processing'
+                    });
+                    
+                    // Acknowledge message even on error to prevent infinite retries
+                    await subClient.xAck(CONFIG.STREAM_KEY, CONFIG.CONSUMER_GROUP, message.id);
+                  }
+                }
+              }
             }
           }
         }
       } catch (error) {
-        logger.error('Error in processing loop:', error);
-        await delay(5000);
+        logError('Error in order processing loop', error as Error, {
+          operation: 'processing_loop'
+        });
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY));
       }
     }
   }
 
-  private async handleMessage(message: StreamMessage) {
-    const { orderId, orderData } = message.message;
-    
-    if (!orderId || !orderData) {
-      logger.error('Invalid message:', message.message);
-      await this.ackMessage(message.id);
-      return;
-    }
-
-    try {
-      const order = JSON.parse(orderData) as Order;
-      await this.processor.processOrder(orderId, order);
-      await this.ackMessage(message.id);
-      
-    } catch (error) {
-      logger.error('Failed to process order:', { orderId, error });
-    }
-  }
-
-  private async ackMessage(messageId: string) {
-    try {
-      await subClient.xAck(CONFIG.STREAM_KEY, CONFIG.CONSUMER_GROUP, messageId);
-    } catch (error) {
-      logger.error('Failed to ack message:', { messageId, error });
-    }
-  }
-
-  async stop() {
+  private async shutdown(): Promise<void> {
+    console.log('Shutting down order worker...');
     this.isRunning = false;
-    await delay(CONFIG.SHUTDOWN_TIMEOUT);
-    logger.info('Order worker stopped');
+    
+    // Wait for current operations to complete
+    await new Promise(resolve => setTimeout(resolve, CONFIG.SHUTDOWN_TIMEOUT));
+    
+    console.log('Order worker shutdown complete');
+    process.exit(0);
   }
-
 }
 
-// Start worker
+// Start the worker
 const worker = new OrderWorker();
-
-// Graceful shutdown
-['SIGINT', 'SIGTERM'].forEach(signal => {
-  process.on(signal, async () => {
-    logger.info(`Received ${signal}, shutting down...`);
-    await worker.stop();
-    process.exit(0);
-  });
-});
-
-// Error handling
-process.on('uncaughtException', (error) => {
-  logger.error('Uncaught exception:', error);
-  process.exit(1);
-});
-
-process.on('unhandledRejection', (reason) => {
-  logger.error('Unhandled rejection:', reason);
-  process.exit(1);
-});
-
-// Start
-worker.start().catch((error) => {
-  logger.error('Failed to start worker:', error);
+worker.start().catch(error => {
+  console.error('Failed to start order worker:', error);
   process.exit(1);
 });

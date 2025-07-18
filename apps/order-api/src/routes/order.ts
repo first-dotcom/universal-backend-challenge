@@ -1,7 +1,8 @@
 import express from 'express';
 import { z } from 'zod';
-import logger from 'shared/lib/logger';
-import { Order, OrderStatus } from 'shared/types';
+import { v4 as uuidv4 } from 'uuid';
+import { logOrder, logError } from 'shared/lib/logger';
+import { Order } from 'shared/types';
 import { OrderRequest } from 'universal-sdk';
 import { ALLOWED_TOKENS, ALLOWED_BLOCKCHAINS, addressRegex } from '../config';
 import db from 'shared/lib/database';
@@ -31,14 +32,18 @@ const OrderRequestSchema = z.object({
   signature: z.string(),
 });
 
-// POST /order - Submit an order
+// POST /order - Submit an order with enhanced traceId tracking
 router.post('/', async (req, res) => {
+  const startTime = Date.now();
+  const traceId = req.traceId;
+  
   try {
-    logger.info('Processing order submission');
+    logOrder('temp', 'submission_started', 'VALIDATING', traceId);
     
     const validationResult = OrderRequestSchema.safeParse(req.body);
     
     if (!validationResult.success) {
+      logOrder('temp', 'validation_failed', 'INVALID', traceId);
       return res.status(400).json({
         success: false,
         error: 'Invalid order request data',
@@ -46,13 +51,15 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Create order object for storage
+    // Create order with enhanced tracking
     const orderId = generateOrderId();
     const order: Order = {
       id: orderId,
       quote: validationResult.data as OrderRequest,
       status: 'PENDING'
     };
+    
+    logOrder(orderId, 'created', 'PENDING', traceId);
     
     // Store order in database
     await db.insert(orders).values({
@@ -61,24 +68,35 @@ router.post('/', async (req, res) => {
       status: 'PENDING'
     });
     
-    // Publish to Redis Stream for worker to process
+    // Publish to Redis Stream with traceId for worker tracking
     await pubClient.xAdd('orders:stream', '*', {
       orderId,
       orderData: JSON.stringify(order),
       createdAt: new Date().toISOString(),
-      status: 'PENDING'
+      status: 'PENDING',
+      traceId
     });
     
-    logger.info('Order created successfully', { orderId: order.id });
+    logOrder(orderId, 'queued', 'PENDING', traceId);
+    
     res.json({
       success: true,
       data: {
-        order,
+        order: {
+          ...order,
+          traceId  // Include traceId in response for client tracking
+        },
         message: 'Order created and queued for processing'
       }
     });
   } catch (error) {
-    logger.error('Order submission failed:', error);
+    const duration = Date.now() - startTime;
+    logError('Order submission failed', error as Error, {
+      traceId,
+      duration,
+      operation: 'order_submission'
+    });
+    
     res.status(500).json({
       success: false,
       error: error instanceof Error ? error.message : 'Failed to submit order'
@@ -86,45 +104,50 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /order/:id - Get order by ID
+// GET /order/:id - Get order by ID with traceId tracking
 router.get('/:id', async (req, res) => {
+  const traceId = req.traceId;
+  const orderId = req.params.id;
+  
   try {
-    const orderId = req.params.id;
-    logger.info('Fetching order', { orderId });
+    logOrder(orderId, 'lookup_started', undefined, traceId);
     
-    const result = await db.select().from(orders).where(eq(orders.id, orderId));
+    const order = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
     
-    if (result.length === 0) {
+    if (order.length === 0) {
+      logOrder(orderId, 'not_found', 'MISSING', traceId);
       return res.status(404).json({
         success: false,
         error: 'Order not found'
       });
     }
     
-    const order = result[0];
-    const orderResponse: Order = {
-      id: order.id,
-      quote: order.quote as OrderRequest,
-      status: order.status as OrderStatus
-    };
+    logOrder(orderId, 'lookup_completed', order[0].status, traceId);
     
-    logger.info('Order retrieved successfully', { orderId });
     res.json({
       success: true,
-      data: orderResponse
+      data: {
+        ...order[0],
+        traceId  // Include current traceId for tracking
+      }
     });
   } catch (error) {
-    logger.error('Failed to fetch order:', error);
+    logError('Order lookup failed', error as Error, {
+      traceId,
+      orderId,
+      operation: 'order_lookup'
+    });
+    
     res.status(500).json({
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch order'
+      error: error instanceof Error ? error.message : 'Failed to retrieve order'
     });
   }
 });
 
 // Helper function to generate order ID
 function generateOrderId(): string {
-  return `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `order_${uuidv4()}`;
 }
 
 export default router; 
