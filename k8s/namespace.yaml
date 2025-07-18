@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: universal-exchange
+  labels:
+    name: universal-exchange
+    app: universal-backend 
