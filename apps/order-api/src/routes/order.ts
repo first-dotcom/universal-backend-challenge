@@ -3,7 +3,7 @@ import { z } from 'zod';
 import logger from 'shared/lib/logger';
 import { Order, OrderStatus } from 'shared/types';
 import { OrderRequest } from 'universal-sdk';
-import { ALLOWED_TOKENS } from '../config';
+import { ALLOWED_TOKENS, ALLOWED_BLOCKCHAINS, addressRegex } from '../config';
 import db from 'shared/lib/database';
 import { orders } from 'shared/lib/schema';
 import { pubClient } from 'shared/lib/redis';
@@ -14,19 +14,19 @@ const router: express.Router = express.Router();
 const OrderRequestSchema = z.object({
   id: z.string(),
   deadline: z.string(),
-  merchant_address: z.string(),
+  merchant_address: z.string().regex(addressRegex, 'Invalid merchant address'),
   gas_fee_nominal: z.string(),
   gas_fee_dollars: z.number(),
   relayer_nonce: z.number(),
   merchant_id: z.string(),
   mode: z.enum(['BRIDGED', 'DIRECT']),
   pair_token_amount: z.string(),
-  user_address: z.string(),
+  user_address: z.string().regex(addressRegex, 'Invalid user address'),
   type: z.enum(['BUY', 'SELL']),
-  blockchain: z.string(),
+  blockchain: z.enum(ALLOWED_BLOCKCHAINS),
   token: z.enum(ALLOWED_TOKENS),
   token_amount: z.string().optional(),
-  pair_token: z.string(),
+  pair_token: z.union([z.literal('USDC'), z.string().regex(addressRegex, 'Invalid token address')]),
   slippage_bips: z.number().optional(),
   signature: z.string(),
 });
