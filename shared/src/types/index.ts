@@ -1,4 +1,4 @@
-import { PairTokenName, QuoteRequest, OrderRequest } from "universal-sdk";
+import { OrderRequest, PairTokenName, QuoteRequest } from "universal-sdk";
 
 export type PairToken = PairTokenName | `0x${string}`;
 
@@ -7,4 +7,4 @@ export interface Order {
   id: string;
   quote: OrderRequest;
   status: OrderStatus;
-} 
+}

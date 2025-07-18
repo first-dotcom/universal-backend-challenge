@@ -1,4 +1,4 @@
-import { OrderRequest, QuoteRequest } from 'universal-sdk';
+import { OrderRequest, QuoteRequest } from "universal-sdk";
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -32,17 +32,17 @@ export interface HealthResponse {
 export interface Order {
   id: string;
   quote: OrderRequest;
-  status: 'PENDING' | 'PROCESSING' | 'SUBMITTED' | 'FAILED';
+  status: "PENDING" | "PROCESSING" | "SUBMITTED" | "FAILED";
 }
 
 export class ApiError extends Error {
   constructor(
     message: string,
     public status: number,
-    public response?: any
+    public response?: any,
   ) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
 }
 
@@ -54,30 +54,25 @@ export interface RequestOptions {
 }
 
 export class ApiClient {
-  constructor(private baseUrl: string = process.env.API_BASE_URL || 'http://localhost:3000') {}
+  constructor(private baseUrl: string = process.env.API_BASE_URL || "http://localhost:3000") {}
 
   public async request<T>(
     method: string,
     endpoint: string,
     data?: any,
-    options: RequestOptions = {}
+    options: RequestOptions = {},
   ): Promise<ApiResponse<T>> {
-    const {
-      retries = 3,
-      retryDelay = 1000,
-      timeout = 5000,
-      headers = {}
-    } = options;
+    const { retries = 3, retryDelay = 1000, timeout = 5000, headers = {} } = options;
 
     const url = `${this.baseUrl}${endpoint}`;
     const requestOptions: RequestInit = {
       method,
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...headers
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...headers,
       },
-      signal: AbortSignal.timeout(timeout)
+      signal: AbortSignal.timeout(timeout),
     };
 
     if (data) {
@@ -92,17 +87,13 @@ export class ApiClient {
         const result = await response.json();
 
         if (!response.ok) {
-          throw new ApiError(
-            result.error || `HTTP ${response.status}`,
-            response.status,
-            result
-          );
+          throw new ApiError(result.error || `HTTP ${response.status}`, response.status, result);
         }
 
         return result;
       } catch (error) {
         lastError = error as Error;
-        
+
         if (error instanceof ApiError) {
           // Don't retry 4xx errors (client errors)
           if (error.status >= 400 && error.status < 500) {
@@ -111,8 +102,12 @@ export class ApiClient {
         }
 
         if (attempt < retries) {
-          console.log(`Request failed (attempt ${attempt + 1}/${retries + 1}), retrying in ${retryDelay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          console.log(
+            `Request failed (attempt ${attempt + 1}/${
+              retries + 1
+            }), retrying in ${retryDelay}ms...`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
         }
       }
     }
@@ -122,21 +117,16 @@ export class ApiClient {
 
   // Health endpoint (special case - returns different format)
   async health(options?: RequestOptions): Promise<HealthResponse> {
-    const {
-      retries = 3,
-      retryDelay = 1000,
-      timeout = 5000,
-      headers = {}
-    } = options || {};
+    const { retries = 3, retryDelay = 1000, timeout = 5000, headers = {} } = options || {};
 
     const url = `${this.baseUrl}/health`;
     const requestOptions: RequestInit = {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Accept': 'application/json',
-        ...headers
+        Accept: "application/json",
+        ...headers,
       },
-      signal: AbortSignal.timeout(timeout)
+      signal: AbortSignal.timeout(timeout),
     };
 
     let lastError: Error;
@@ -147,17 +137,13 @@ export class ApiClient {
         const result = await response.json();
 
         if (!response.ok) {
-          throw new ApiError(
-            result.error || `HTTP ${response.status}`,
-            response.status,
-            result
-          );
+          throw new ApiError(result.error || `HTTP ${response.status}`, response.status, result);
         }
 
         return result;
       } catch (error) {
         lastError = error as Error;
-        
+
         if (error instanceof ApiError) {
           // Don't retry 4xx errors (client errors)
           if (error.status >= 400 && error.status < 500) {
@@ -166,7 +152,7 @@ export class ApiClient {
         }
 
         if (attempt < retries) {
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
         }
       }
     }
@@ -176,20 +162,23 @@ export class ApiClient {
 
   // Quote endpoints
   async getDummyQuote(options?: RequestOptions): Promise<ApiResponse> {
-    return this.request('GET', '/quote', undefined, options);
+    return this.request("GET", "/quote", undefined, options);
   }
 
   async getQuote(data: QuoteRequest, options?: RequestOptions): Promise<ApiResponse> {
-    return this.request('POST', '/quote', data, options);
+    return this.request("POST", "/quote", data, options);
   }
 
   // Order endpoints
-  async createOrder(data: OrderRequest, options?: RequestOptions): Promise<ApiResponse<{ order: Order }>> {
-    return this.request('POST', '/order', data, options);
+  async createOrder(
+    data: OrderRequest,
+    options?: RequestOptions,
+  ): Promise<ApiResponse<{ order: Order }>> {
+    return this.request("POST", "/order", data, options);
   }
 
   async getOrder(id: string, options?: RequestOptions): Promise<ApiResponse<Order>> {
-    return this.request('GET', `/order/${id}`, undefined, options);
+    return this.request("GET", `/order/${id}`, undefined, options);
   }
 
   // Raw request for testing edge cases
@@ -197,17 +186,17 @@ export class ApiClient {
     method: string,
     endpoint: string,
     data?: any,
-    options?: RequestOptions
+    options?: RequestOptions,
   ): Promise<Response> {
     const url = `${this.baseUrl}${endpoint}`;
     const requestOptions: RequestInit = {
       method,
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...options?.headers
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...options?.headers,
       },
-      signal: AbortSignal.timeout(options?.timeout || 5000)
+      signal: AbortSignal.timeout(options?.timeout || 5000),
     };
 
     if (data) {
@@ -216,4 +205,4 @@ export class ApiClient {
 
     return fetch(url, requestOptions);
   }
-} 
+}
