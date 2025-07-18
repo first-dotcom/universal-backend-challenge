@@ -52,8 +52,8 @@ importers:
   apps/order-api:
     dependencies:
       dotenv:
-        specifier: 16.4.7
-        version: 16.4.7
+        specifier: 17.2.0
+        version: 17.2.0
       express:
         specifier: 5.1.0
         version: 5.1.0
@@ -83,8 +83,8 @@ importers:
   apps/order-worker:
     dependencies:
       dotenv:
-        specifier: 16.4.7
-        version: 16.4.7
+        specifier: 17.2.0
+        version: 17.2.0
       redis:
         specifier: 5.6.0
         version: 5.6.0
@@ -1437,8 +1437,8 @@ packages:
     resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
     engines: {node: '>=0.3.1'}
 
-  dotenv@16.4.7:
-    resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
+  dotenv@17.2.0:
+    resolution: {integrity: sha512-Q4sgBT60gzd0BB0lSyYD3xM4YxrXA9y4uBDof1JNYGzOXrQdQ6yX+7XIAqoFOGQFOTK1D3Hts5OllpxMDZFONQ==}
     engines: {node: '>=12'}
 
   drizzle-kit@0.30.6:
@@ -3796,7 +3796,7 @@ snapshots:
 
   diff@4.0.2: {}
 
-  dotenv@16.4.7: {}
+  dotenv@17.2.0: {}
 
   drizzle-kit@0.30.6:
     dependencies:
