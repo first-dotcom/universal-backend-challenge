@@ -14,7 +14,11 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "db:push": "DATABASE_URL=postgresql://postgres:postgres@localhost:5433/universal_exchange pnpm --filter @shared exec drizzle-kit push",
-    "docker:up": "docker compose up -d"
+    "docker:up": "docker compose up -d",
+    "lint": "biome check .",
+    "lint:fix": "biome check --apply .",
+    "format": "biome format --write .",
+    "format:check": "biome format ."
   },
   "dependencies": {
     "drizzle-orm": "0.44.3",
@@ -28,7 +32,7 @@
     "@types/node": "24.0.14",
     "@types/pg": "8.15.4",
     "@vitest/coverage-v8": "^2.1.9",
-    "biome": "0.3.3",
+    "@biomejs/biome": "1.5.2",
     "tsx": "^4.20.3",
     "typescript": "5.8.3",
     "vitest": "^2.1.9"
