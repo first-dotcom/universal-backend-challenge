@@ -8,10 +8,15 @@ class UniversalService {
 
   constructor() {
     const apiKey = process.env.UNIVERSAL_API_KEY;
-    if (!apiKey) {
-      throw new Error('UNIVERSAL_API_KEY environment variable is required');
+    
+    // API key is optional - Universal API works without it for basic usage
+    if (apiKey) {
+      logger.info('Initializing Universal SDK with API key');
+      this.sdk = new UniversalRelayerSDK(apiKey);
+    } else {
+      logger.info('Initializing Universal SDK without API key (public access)');
+      this.sdk = new UniversalRelayerSDK();
     }
-    this.sdk = new UniversalRelayerSDK(apiKey);
   }
 
   async getQuote(quoteRequest: QuoteRequest): Promise<Quote> {

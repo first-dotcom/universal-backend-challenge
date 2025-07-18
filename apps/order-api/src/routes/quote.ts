@@ -3,7 +3,6 @@ import { z } from 'zod';
 import universalService from '../services/universal';
 import logger from 'shared/lib/logger';
 import { QuoteRequest } from 'universal-sdk';
-import { PairToken } from 'shared/types';
 import { ALLOWED_TOKENS, ALLOWED_BLOCKCHAINS, addressRegex } from '../config';
 
 const router: express.Router = express.Router();

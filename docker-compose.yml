@@ -41,7 +41,6 @@ services:
       - PORT=3000
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universal_exchange
       - REDIS_URL=redis://redis:6379
-      - UNIVERSAL_API_KEY=${UNIVERSAL_API_KEY:-dummy_key_for_testing}
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,7 +57,6 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/universal_exchange
       - REDIS_URL=redis://redis:6379
-      - UNIVERSAL_API_KEY=${UNIVERSAL_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy
