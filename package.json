@@ -13,6 +13,7 @@
     "test:integration": "vitest run tests/integration",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
+    "test:health": "./scripts/test-health.sh",
     "db:push": "DATABASE_URL=postgresql://postgres:postgres@localhost:5433/universal_exchange pnpm --filter @shared exec drizzle-kit push",
     "db:studio": "DATABASE_URL=postgresql://postgres:postgres@localhost:5433/universal_exchange pnpm --filter @shared exec drizzle-kit studio"
   },

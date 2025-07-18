@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { ApiClient, ApiError } from '../helpers/api-client';
 import { measureResponseTime } from '../helpers/docker-utils';
 import { createValidQuoteRequest, invalidQuoteRequests } from '../helpers/test-data';
+import { TokenName, BlockchainName } from 'universal-sdk';
 import { 
   expectSuccessResponse, 
   expectErrorResponse, 
@@ -68,7 +69,7 @@ describe('Quote Endpoints', () => {
     });
 
     it('should handle different tokens', async () => {
-      const tokens = ['ETH', 'BTC', 'SOL', 'MATIC'];
+      const tokens: TokenName[] = ['ETH', 'BTC', 'SOL', 'MATIC'];
       
       for (const token of tokens) {
         const quoteRequest = createValidQuoteRequest({ token });
@@ -79,7 +80,7 @@ describe('Quote Endpoints', () => {
     });
 
     it('should handle different blockchains', async () => {
-      const blockchains = ['ARBITRUM', 'BASE', 'POLYGON', 'WORLD'];
+      const blockchains: BlockchainName[] = ['ARBITRUM', 'BASE', 'POLYGON', 'WORLD'];
       
       for (const blockchain of blockchains) {
         const quoteRequest = createValidQuoteRequest({ blockchain });

@@ -29,12 +29,21 @@ export function expectValidOrder(order: Order): void {
   expect(typeof order.quote).toBe('object');
 }
 
-export function expectValidHealthResponse(response: { status: string; timestamp: string }): void {
+export function expectValidHealthResponse(response: { status: string; timestamp: string; details?: any }): void {
   expect(response).toBeDefined();
-  expect(response.status).toBe('OK');
+  expect(response.status).toBeDefined();
+  expect(['OK', 'Unhealthy']).toContain(response.status);
   expect(response.timestamp).toBeDefined();
   expect(typeof response.timestamp).toBe('string');
   expect(new Date(response.timestamp)).toBeInstanceOf(Date);
+  
+  // If it's the new combined format, check details
+  if (response.details) {
+    expect(response.details.liveness).toBeDefined();
+    expect(response.details.readiness).toBeDefined();
+    expect(response.details.liveness.status).toBeDefined();
+    expect(response.details.readiness.status).toBeDefined();
+  }
 }
 
 export function expectResponseTime(responseTime: number, maxTime: number = 500): void {

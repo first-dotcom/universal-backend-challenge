@@ -1,13 +1,12 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { ApiClient, ApiError, Order } from '../helpers/api-client';
+import { ApiClient, ApiError, ApiResponse, Order } from '../helpers/api-client';
 import { measureResponseTime } from '../helpers/docker-utils';
 import { createValidOrderRequest, invalidOrderRequests } from '../helpers/test-data';
+import { TokenName, BlockchainName } from 'universal-sdk';
 import { 
   expectSuccessResponse, 
-  expectErrorResponse, 
   expectResponseTime, 
   expectValidOrder,
-  expectValidationError 
 } from '../helpers/assertions';
 
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
@@ -30,11 +29,11 @@ describe('Order Endpoints', () => {
       const response = await client.createOrder(orderRequest);
       
       expectSuccessResponse(response);
-      expectValidOrder(response.data.order);
-      expect(response.data.order.quote.type).toBe('BUY');
-      expect(response.data.order.status).toBe('PENDING');
+      expectValidOrder(response.data!.order);
+      expect(response.data!.order.quote.type).toBe('BUY');
+      expect(response.data!.order.status).toBe('PENDING');
       
-      createdOrderIds.push(response.data.order.id);
+      createdOrderIds.push(response.data!.order.id);
     });
 
     it('should create order with valid SELL request', async () => {
@@ -46,36 +45,36 @@ describe('Order Endpoints', () => {
       const response = await client.createOrder(orderRequest);
       
       expectSuccessResponse(response);
-      expectValidOrder(response.data.order);
-      expect(response.data.order.quote.type).toBe('SELL');
-      expect(response.data.order.status).toBe('PENDING');
+      expectValidOrder(response.data!.order);
+      expect(response.data!.order.quote.type).toBe('SELL');
+      expect(response.data!.order.status).toBe('PENDING');
       
-      createdOrderIds.push(response.data.order.id);
+      createdOrderIds.push(response.data!.order.id);
     });
 
     it('should handle different tokens', async () => {
-      const tokens = ['ETH', 'BTC', 'SOL', 'MATIC'];
+      const tokens: TokenName[] = ['ETH', 'BTC', 'SOL', 'MATIC'];
       
       for (const token of tokens) {
         const orderRequest = createValidOrderRequest({ token });
         const response = await client.createOrder(orderRequest);
         
         expectSuccessResponse(response);
-        expectValidOrder(response.data.order);
-        createdOrderIds.push(response.data.order.id);
+        expectValidOrder(response.data!.order);
+        createdOrderIds.push(response.data!.order.id);
       }
     });
 
     it('should handle different blockchains', async () => {
-      const blockchains = ['ARBITRUM', 'BASE', 'POLYGON', 'WORLD'];
+      const blockchains: BlockchainName[] = ['ARBITRUM', 'BASE', 'POLYGON', 'WORLD'];
       
       for (const blockchain of blockchains) {
         const orderRequest = createValidOrderRequest({ blockchain });
         const response = await client.createOrder(orderRequest);
         
         expectSuccessResponse(response);
-        expectValidOrder(response.data.order);
-        createdOrderIds.push(response.data.order.id);
+        expectValidOrder(response.data!.order);
+        createdOrderIds.push(response.data!.order.id);
       }
     });
 
@@ -85,7 +84,7 @@ describe('Order Endpoints', () => {
       );
       
       const responses = await Promise.all(requests);
-      const orderIds = responses.map(r => r.data.order.id);
+      const orderIds = responses.map(r => r.data!.order.id);
       
       // Check all IDs are unique
       const uniqueIds = new Set(orderIds);
@@ -112,10 +111,10 @@ describe('Order Endpoints', () => {
       
       responses.forEach(response => {
         expectSuccessResponse(response);
-        expectValidOrder(response.data.order);
+        expectValidOrder(response.data!.order);
       });
       
-      createdOrderIds.push(...responses.map(r => r.data.order.id));
+      createdOrderIds.push(...responses.map(r => r.data!.order.id));
     });
 
     describe('Validation Errors', () => {
@@ -188,7 +187,7 @@ describe('Order Endpoints', () => {
       // Create a test order for GET tests
       const orderRequest = createValidOrderRequest();
       const response = await client.createOrder(orderRequest);
-      testOrderId = response.data.order.id;
+      testOrderId = response.data!.order.id;
       createdOrderIds.push(testOrderId);
     });
 
@@ -196,8 +195,8 @@ describe('Order Endpoints', () => {
       const response = await client.getOrder(testOrderId);
       
       expectSuccessResponse(response);
-      expectValidOrder(response.data);
-      expect(response.data.id).toBe(testOrderId);
+      expectValidOrder(response.data!);
+      expect(response.data!.id).toBe(testOrderId);
     });
 
     it('should return 404 for non-existent order ID', async () => {
@@ -224,8 +223,8 @@ describe('Order Endpoints', () => {
       
       responses.forEach(response => {
         expectSuccessResponse(response);
-        expectValidOrder(response.data);
-        expect(response.data.id).toBe(testOrderId);
+        expectValidOrder(response.data!);
+        expect(response.data!.id).toBe(testOrderId);
       });
     });
 
@@ -237,8 +236,8 @@ describe('Order Endpoints', () => {
         const response = await client.getOrder(orderId);
         
         expectSuccessResponse(response);
-        expectValidOrder(response.data);
-        expect(response.data.id).toBe(orderId);
+        expectValidOrder(response.data!);
+        expect(response.data!.id).toBe(orderId);
       }
     });
 
@@ -287,7 +286,7 @@ describe('Order Endpoints', () => {
       const createResponse = await client.createOrder(orderRequest);
       expectSuccessResponse(createResponse);
       
-      const orderId = createResponse.data.order.id;
+      const orderId = createResponse.data!.order.id;
       createdOrderIds.push(orderId);
       
       // Retrieve order
@@ -295,15 +294,15 @@ describe('Order Endpoints', () => {
       expectSuccessResponse(getResponse);
       
       // Compare data
-      expect(getResponse.data.id).toBe(orderId);
-      expect(getResponse.data.quote.id).toBe(orderRequest.id);
-      expect(getResponse.data.quote.type).toBe(orderRequest.type);
-      expect(getResponse.data.quote.token).toBe(orderRequest.token);
-      expect(getResponse.data.status).toBe('PENDING');
+      expect(getResponse.data!.id).toBe(orderId);
+      expect(getResponse.data!.quote.id).toBe(orderRequest.id);
+      expect(getResponse.data!.quote.type).toBe(orderRequest.type);
+      expect(getResponse.data!.quote.token).toBe(orderRequest.token);
+      expect(getResponse.data!.status).toBe('PENDING');
     });
 
     it('should handle rapid create and retrieve operations', async () => {
-      const operations: Promise<any>[] = [];
+      const operations: Promise<ApiResponse<{ order: Order; }>>[] = [];
       
       // Create multiple orders rapidly
       for (let i = 0; i < 3; i++) {
@@ -315,20 +314,20 @@ describe('Order Endpoints', () => {
       
       // Retrieve all created orders
       const retrieveOperations = createResponses.map(response => 
-        client.getOrder(response.data.order.id)
+        client.getOrder(response.data!.order.id)
       );
       
       const retrieveResponses = await Promise.all(retrieveOperations);
       
       // Verify all operations succeeded
-      createResponses.forEach(response => {
+      createResponses.forEach((response: any) => {
         expectSuccessResponse(response);
-        createdOrderIds.push(response.data.order.id);
+        createdOrderIds.push((response as any).data.order.id);
       });
       
       retrieveResponses.forEach(response => {
         expectSuccessResponse(response);
-        expectValidOrder(response.data);
+        expectValidOrder(response.data!);
       });
     });
   });

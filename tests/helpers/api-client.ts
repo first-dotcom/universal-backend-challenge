@@ -7,6 +7,28 @@ export interface ApiResponse<T = any> {
   details?: any;
 }
 
+export interface HealthResponse {
+  status: string;
+  timestamp: string;
+  details: {
+    liveness: {
+      status: string;
+      timestamp: string;
+      heartbeatAge: number;
+      eventLoopDelay: number;
+    };
+    readiness: {
+      status: string;
+      timestamp: string;
+      checks: Array<{
+        name: string;
+        status: string;
+        error?: string;
+      }>;
+    };
+  };
+}
+
 export interface Order {
   id: string;
   quote: OrderRequest;
@@ -32,14 +54,14 @@ export interface RequestOptions {
 }
 
 export class ApiClient {
-  constructor(private baseUrl: string) {}
+  constructor(private baseUrl: string = process.env.API_BASE_URL || 'http://localhost:3000') {}
 
-  private async request<T>(
+  public async request<T>(
     method: string,
     endpoint: string,
     data?: any,
     options: RequestOptions = {}
-  ): Promise<T> {
+  ): Promise<ApiResponse<T>> {
     const {
       retries = 3,
       retryDelay = 1000,
@@ -99,7 +121,7 @@ export class ApiClient {
   }
 
   // Health endpoint (special case - returns different format)
-  async health(options?: RequestOptions): Promise<{ status: string; timestamp: string }> {
+  async health(options?: RequestOptions): Promise<HealthResponse> {
     const {
       retries = 3,
       retryDelay = 1000,

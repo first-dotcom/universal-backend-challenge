@@ -1,4 +1,4 @@
-import { QuoteRequest, OrderRequest } from 'universal-sdk';
+import { QuoteRequest, OrderRequest, TokenName, BlockchainName } from 'universal-sdk';
 
 export const VALID_ADDRESS = '0x742d35Cc6634C0532925a3b8d435c6878c05325A';
 export const INVALID_ADDRESS = '0xinvalid';
@@ -92,11 +92,11 @@ export const invalidOrderRequests = {
   },
   invalidToken: {
     ...createValidOrderRequest(),
-    token: 'INVALID_TOKEN'
+    token: 'INVALID_TOKEN' as TokenName
   },
   invalidMode: {
     ...createValidOrderRequest(),
-    mode: 'INVALID_MODE'
+    mode: 'INVALID_MODE' as any
   },
   invalidAddress: {
     ...createValidOrderRequest(),
