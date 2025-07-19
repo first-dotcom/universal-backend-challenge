@@ -1,6 +1,4 @@
-import { OrderRequest, PairTokenName, QuoteRequest } from "universal-sdk";
-
-export type PairToken = PairTokenName | `0x${string}`;
+import { OrderRequest } from "universal-sdk";
 
 export type OrderStatus = "PENDING" | "PROCESSING" | "SUBMITTED" | "FAILED";
 export interface Order {

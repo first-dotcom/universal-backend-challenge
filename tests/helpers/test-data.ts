@@ -1,4 +1,4 @@
-import { BlockchainName, OrderRequest, QuoteRequest, TokenName } from "universal-sdk";
+import { OrderRequest, QuoteRequest, TokenName } from "universal-sdk";
 
 export const VALID_ADDRESS = "0x742d35Cc6634C0532925a3b8d435c6878c05325A";
 export const INVALID_ADDRESS = "0xinvalid";

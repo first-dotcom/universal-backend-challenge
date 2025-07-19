@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { ApiClient } from "../helpers/api-client";
-import { expectValidHealthResponse } from "../helpers/assertions";
 
 const client = new ApiClient();
 

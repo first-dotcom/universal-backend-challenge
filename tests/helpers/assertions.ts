@@ -10,7 +10,7 @@ export function expectSuccessResponse<T>(
   expect(response.error).toBeUndefined();
 }
 
-export function expectErrorResponse(response: ApiResponse, expectedStatus?: number): void {
+export function expectErrorResponse(response: ApiResponse): void {
   expect(response).toBeDefined();
   expect(response.success).toBe(false);
   expect(response.error).toBeDefined();

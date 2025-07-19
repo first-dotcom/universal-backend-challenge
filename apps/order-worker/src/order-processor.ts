@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import db from "shared/lib/database";
-import logger, { logOrder, logError } from "shared/lib/logger";
+import logger, { logOrder } from "shared/lib/logger";
 import { subClient } from "shared/lib/redis";
 import { orders } from "shared/lib/schema";
 import { delay } from "shared/lib/time";
