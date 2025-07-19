@@ -26,9 +26,9 @@ class QuoteService {
   createDummyQuoteRequest(): QuoteRequest {
     return {
       type: "BUY",
-      token: "ETH",
+      token: "BTC",
       pair_token: "USDC",
-      pair_token_amount: "1000", // 1000 USDC
+      pair_token_amount: "1000000",
       blockchain: "BASE",
       user_address: "0x1111111111111111111111111111111111111111",
       slippage_bips: 50, // 0.5%
