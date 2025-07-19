@@ -1,10 +1,7 @@
 import { BlockchainName, TokenName } from "universal-sdk";
 import { beforeAll, describe, expect, it } from "vitest";
 import { ApiClient, ApiError } from "../helpers/api-client";
-import {
-  expectResponseTime,
-  expectSuccessResponse,
-} from "../helpers/assertions";
+import { expectResponseTime, expectSuccessResponse } from "../helpers/assertions";
 import { measureResponseTime } from "../helpers/docker-utils";
 import { createValidQuoteRequest, invalidQuoteRequests } from "../helpers/test-data";
 

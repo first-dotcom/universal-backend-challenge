@@ -3,7 +3,7 @@ import logger from "shared/lib/logger";
 import { QuoteRequest } from "universal-sdk";
 import { z } from "zod";
 import { ALLOWED_BLOCKCHAINS, ALLOWED_TOKENS, addressRegex } from "../config";
-import universalService from "../services/universal";
+import quoteService from "../services/quote";
 
 const router: express.Router = express.Router();
 
@@ -29,10 +29,10 @@ router.get("/", async (req, res) => {
     logger.info("Processing quote request with dummy data");
 
     // Create dummy quote request
-    const dummyQuoteRequest = universalService.createDummyQuoteRequest();
+    const dummyQuoteRequest = quoteService.createDummyQuoteRequest();
 
     // Get quote from universal service
-    const quote = await universalService.getQuote(dummyQuoteRequest);
+    const quote = await quoteService.getQuote(dummyQuoteRequest);
 
     logger.info("Quote request processed successfully");
     res.json({
@@ -68,7 +68,7 @@ router.post("/", async (req, res) => {
     const quoteRequest = validationResult.data as QuoteRequest;
 
     // Get quote from universal service
-    const quote = await universalService.getQuote(quoteRequest);
+    const quote = await quoteService.getQuote(quoteRequest);
 
     logger.info("Quote request processed successfully");
     res.json({

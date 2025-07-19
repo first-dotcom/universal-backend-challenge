@@ -54,6 +54,7 @@ export class OrderProcessor {
       } catch (error) {
         lastError = error instanceof Error ? error.message : String(error);
         this.onFailure();
+        logger.error("Order processing failed:", { orderId, error: lastError });
 
         if (attempt < CONFIG.MAX_RETRIES) {
           await delay(CONFIG.RETRY_DELAY * attempt);
