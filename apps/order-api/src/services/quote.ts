@@ -22,16 +22,16 @@ class QuoteService {
     }
   }
 
-  // Method to create dummy quote request for testing
+  // Method to create dummy quote request for testing - WORKING PARAMETERS
   createDummyQuoteRequest(): QuoteRequest {
     return {
-      type: "BUY",
-      token: "BTC",
+      type: "SELL",
+      token: "ETH",
+      token_amount: "1000000000000000000", // 1 ETH in wei (18 decimals)
       pair_token: "USDC",
-      pair_token_amount: "1000000",
       blockchain: "BASE",
       user_address: "0x1111111111111111111111111111111111111111",
-      slippage_bips: 50, // 0.5%
+      slippage_bips: 100, // 1%
     };
   }
 }
