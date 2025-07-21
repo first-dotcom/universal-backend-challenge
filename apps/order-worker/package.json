@@ -12,7 +12,7 @@
     "redis": "5.6.0"
   },
   "devDependencies": {
-    "@types/node": "24.0.14",
+    "@types/node": "24.0.15",
     "ts-node-dev": "2.0.0",
     "typescript": "5.8.3"
   }
