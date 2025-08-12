@@ -8,7 +8,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "drizzle-orm": "0.44.3",
+    "drizzle-orm": "0.44.4",
     "pg": "8.16.3",
     "redis": "5.6.0",
     "winston": "3.17.0"
