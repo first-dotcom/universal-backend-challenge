@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       drizzle-orm:
-        specifier: 0.44.3
-        version: 0.44.3(@types/pg@8.15.4)(gel@2.1.1)(pg@8.16.3)
+        specifier: 0.44.6
+        version: 0.44.6(@types/pg@8.15.4)(gel@2.1.1)(pg@8.16.3)
       pg:
         specifier: 8.16.3
         version: 8.16.3
@@ -105,8 +105,8 @@ importers:
   shared:
     dependencies:
       drizzle-orm:
-        specifier: 0.44.3
-        version: 0.44.3(@types/pg@8.15.4)(gel@2.1.1)(pg@8.16.3)
+        specifier: 0.44.6
+        version: 0.44.6(@types/pg@8.15.4)(gel@2.1.1)(pg@8.16.3)
       pg:
         specifier: 8.16.3
         version: 8.16.3
@@ -1448,8 +1448,8 @@ packages:
     resolution: {integrity: sha512-U4wWit0fyZuGuP7iNmRleQyK2V8wCuv57vf5l3MnG4z4fzNTjY/U13M8owyQ5RavqvqxBifWORaR3wIUzlN64g==}
     hasBin: true
 
-  drizzle-orm@0.44.3:
-    resolution: {integrity: sha512-8nIiYQxOpgUicEL04YFojJmvC4DNO4KoyXsEIqN44+g6gNBr6hmVpWk3uyAt4CaTiRGDwoU+alfqNNeonLAFOQ==}
+  drizzle-orm@0.44.6:
+    resolution: {integrity: sha512-uy6uarrrEOc9K1u5/uhBFJbdF5VJ5xQ/Yzbecw3eAYOunv5FDeYkR2m8iitocdHBOHbvorviKOW5GVw0U1j4LQ==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -3815,7 +3815,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.3(@types/pg@8.15.4)(gel@2.1.1)(pg@8.16.3):
+  drizzle-orm@0.44.6(@types/pg@8.15.4)(gel@2.1.1)(pg@8.16.3):
     optionalDependencies:
       '@types/pg': 8.15.4
       gel: 2.1.1
